@@ -1,0 +1,46 @@
+<set xmlns:android="http://schemas.android.com/apk/res/android"
+    android:interpolator="@anim/interpolator_overshoot" >
+
+    <!-- <scale -->
+    <!-- android:pivotX="50%" -->
+    <!-- android:fromXScale="0.97" -->
+    <!-- android:toXScale="1" -->
+    <!-- android:fromYScale="0.95" -->
+    <!-- android:toYScale="1" -->
+    <!-- android:duration="600" -->
+    <!-- /> -->
+    <!-- <alpha -->
+    <!-- android:fromAlpha="0" -->
+    <!-- android:toAlpha="1" -->
+    <!-- android:duration="800" -->
+    <!-- /> -->
+    <scale
+        android:duration="600"
+        android:fromXScale="0.8"
+        android:fromYScale="0.7"
+        android:pivotX="50%"
+        android:pivotY="60%"
+        android:toXScale="1"
+        android:toYScale="1" />
+
+    <translate
+        android:duration="600"
+        android:fromXDelta="0"
+        android:fromYDelta="-15%p"
+        android:toXDelta="0"
+        android:toYDelta="0" />
+
+    <alpha
+        android:duration="700"
+        android:fromAlpha="0"
+        android:toAlpha="1" />
+
+</set><!--
+ 显示的效果为ListView第一次出现的时候为 item随机出现
+  每个Item都是从左不可见（-100%p）的区域向右滑动到显示的地方
+
+
+
+
+
+-->

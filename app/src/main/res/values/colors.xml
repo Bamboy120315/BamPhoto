@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">#009E96</color>
+    <color name="colorAccent">#FF51BBB5</color>
+    <color name="colorEasy">#15009E96</color>
+
+    <color name="colorPrimary_alpha_5">#55009E96</color>
+    <color name="colorPrimary_alpha_3">#33009E96</color>
+
+    <color name="transparent">#0000</color>
+    <color name="black">#000</color>
+    <color name="white">#FFF</color>
+    <!-- 透明白色 -->
+    <color name="white_alpha">#5FFF</color>
+    <color name="white_alpha_9">#9FFF</color>
+    <color name="white_alpha_B">#BFFF</color>
+    <!-- 透明黑色 -->
+    <color name="black_alpha_9">#9000</color>
+
+    <color name="tv_title">#333</color>
+    <color name="tv_subtitle">#666</color>
+    <color name="tv_describe">#999</color>
+
+</resources>
