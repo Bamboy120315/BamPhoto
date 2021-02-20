@@ -9,9 +9,11 @@ import android.widget.TextView;
 
 import com.bamboy.bimage.R;
 import com.bamboy.bimage.util.UIUtil;
-import com.bamboy.bimage.view.NowelSeekBar;
+import com.bamboy.bimage.view.VideoSeekBar;
 import com.bamboy.bimage.view.ijkplayer.IjkPlayer;
 import com.bamboy.bimage.view.scrollpicker.StringScrollPicker;
+import com.shuyu.gsyvideoplayer.video.StandardGSYVideoPlayer;
+import com.shuyu.gsyvideoplayer.video.base.GSYVideoView;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -51,7 +53,7 @@ public class NormalController extends Controller {
     /**
      * 进度拖动条
      */
-    public NowelSeekBar nsp_progress;
+    public VideoSeekBar nsp_progress;
     /**
      * 上一个
      */
@@ -75,10 +77,10 @@ public class NormalController extends Controller {
      *
      * @param context
      * @param context
-     * @param ijk_video
+     * @param videoPlayer
      */
-    public NormalController(Context context, ViewGroup parent, IjkPlayer ijk_video) {
-        super(context, ijk_video);
+    public NormalController(Context context, ViewGroup parent, GSYVideoView videoPlayer) {
+        super(context, videoPlayer);
         mParent = parent;
 
         // 初始化View
@@ -88,8 +90,8 @@ public class NormalController extends Controller {
         initSpeed();
 
         // 拖动条监听
-        nsp_progress.setProgressListener((NowelSeekBar progressBar, long progress) ->
-                mIjk_video.seekTo(progress));
+        nsp_progress.setProgressListener((VideoSeekBar progressBar, long progress) ->
+                videoPlayer.seekTo(progress));
     }
 
     /**
@@ -165,8 +167,8 @@ public class NormalController extends Controller {
      * @param progress
      */
     public void updateProgress(long progress) {
-        if (mIjk_video != null) {
-            progress = Math.max(progress, mIjk_video.getCurrentPosition());
+        if (mVideoPlayer != null) {
+            progress = Math.max(progress, mVideoPlayer.getCurrentPositionWhenPlaying());
         }
         super.updateProgress(progress);
         if (progress < 0) {
@@ -197,7 +199,7 @@ public class NormalController extends Controller {
         iv_play.setImageResource(R.drawable.ic_pause);
 
         // 开始计时
-        startTimer();
+        // startTimer();
     }
 
     /**

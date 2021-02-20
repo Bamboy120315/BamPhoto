@@ -6,12 +6,6 @@
     android:layout_height="match_parent"
     android:background="@color/black"
     android:fitsSystemWindows="false"
-    tools:context=".page.video.VideoActivity">
-
-    <com.bamboy.bimage.page.video.NormalVideoPlayer
-        android:id="@+id/gsy_video"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_centerInParent="true" />
+    tools:context=".page.video.IJKVideoActivity">
 
 </RelativeLayout>

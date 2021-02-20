@@ -4,35 +4,25 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
-import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
-import android.view.ViewTreeObserver;
-import android.view.WindowManager;
 import android.widget.RelativeLayout;
 
 import androidx.annotation.NonNull;
 
 import com.bamboy.bimage.R;
 import com.bamboy.bimage.page.media.bean.FileBean;
-import com.bamboy.bimage.page.video.controller.Controller;
-import com.bamboy.bimage.page.video.controller.NormalController;
 import com.bamboy.bimage.util.MediaUtil;
-import com.bamboy.bimage.view.ijkplayer.IjkPlayer;
-import com.bamboy.bimage.view.ijkplayer.VideoPlayerListener;
+import com.bamboy.bimage.util.NullUtil;
+import com.bamboy.bimage.util.UIUtil;
+import com.shuyu.gsyvideoplayer.GSYVideoManager;
+import com.shuyu.gsyvideoplayer.listener.GSYMediaPlayerListener;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import tv.danmaku.ijk.media.player.IMediaPlayer;
-import tv.danmaku.ijk.media.player.IjkMediaPlayer;
-
-import static com.bamboy.bimage.util.OrientationUtil.ORIENTATION_HORIZONTAL_LEFT;
-import static com.bamboy.bimage.util.OrientationUtil.ORIENTATION_HORIZONTAL_RIGHT;
-import static com.bamboy.bimage.util.OrientationUtil.ORIENTATION_VERTICAL;
-
-public class VideoActivity extends BaseVideoActivity {
+public class VideoActivity extends BaseVideoActivity implements GSYMediaPlayerListener {
 
     /**
      * 数据列表
@@ -55,15 +45,10 @@ public class VideoActivity extends BaseVideoActivity {
      * 容器
      */
     private RelativeLayout rl_root;
-
     /**
      * 播放器
      */
-    private IjkPlayer ijk_video;
-    /**
-     * 控制器
-     */
-    private Controller mController;
+    private NormalVideoPlayer gsy_video;
 
     /**
      * 启动界面
@@ -79,36 +64,9 @@ public class VideoActivity extends BaseVideoActivity {
         context.startActivity(intent);
     }
 
-    /**
-     * 隐藏ActionBar和StatusBar
-     */
-    private void hideActionStatusBar() {
-        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
-        getWindow().addFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
-        getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
-
-        // 全屏展示
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                // 全屏显示，隐藏状态栏和导航栏，拉出状态栏和导航栏显示一会儿后消失。
-                getWindow().getDecorView().setSystemUiVisibility(
-                        View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                                | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                                | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                                | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                                | View.SYSTEM_UI_FLAG_FULLSCREEN
-                                | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
-            } else {
-                // 全屏显示，隐藏状态栏
-                getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_FULLSCREEN);
-            }
-        }
-    }
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        // hideActionStatusBar();
         setContentView(R.layout.act_video);
 
         // 匹配View
@@ -119,9 +77,50 @@ public class VideoActivity extends BaseVideoActivity {
     }
 
     @Override
+    protected void onPause() {
+        super.onPause();
+        gsy_video.onVideoPause();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        gsy_video.onVideoResume();
+    }
+
+    @Override
     protected void onDestroy() {
-        ijk_video.stop();
         super.onDestroy();
+        //释放所有
+        gsy_video.setVideoAllCallBack(null);
+        GSYVideoManager.releaseAllVideos();
+    }
+
+    /**
+     * 匹配View
+     */
+    private void findView() {
+        rl_root = findViewById(R.id.rl_root);
+        gsy_video = findViewById(R.id.gsy_video);
+
+        // 初始化控制器
+        // initController(rl_root, gsy_video);
+    }
+
+    /**
+     * 处理数据
+     */
+    private void init() {
+        gsy_video.getGSYVideoManager().setListener(this);
+        //设置返回键
+        gsy_video.getBackButton().setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                onBackPressed();
+            }
+        });
+
+        rl_root.post(() -> initVideo(-1));
     }
 
     @Override
@@ -129,7 +128,7 @@ public class VideoActivity extends BaseVideoActivity {
         super.onConfigurationChanged(newConfig);
 
         // 监听视图，等转屏后父容器绘制完成，重进计算播放器尺寸
-        ViewTreeObserver observer = rl_root.getViewTreeObserver();
+        /*ViewTreeObserver observer = rl_root.getViewTreeObserver();
         observer.addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
             @Override
             public void onGlobalLayout() {
@@ -138,202 +137,40 @@ public class VideoActivity extends BaseVideoActivity {
                 // 处理播放器尺寸
                 initPlayerSize(rl_root.getWidth(), rl_root.getHeight(), mVideoBitmap.getWidth(), mVideoBitmap.getHeight());
             }
-        });
+        });*/
     }
 
     /**
-     * 屏幕方向改变
+     * 处理视频 准备播放
      *
-     * @param orientationState 【1：ORIENTATION_VERTICAL：竖屏】
-     *                         【2：ORIENTATION_HORIZONTAL_LEFT：左横屏】
+     * @param position 索引
      */
-    @Override
-    protected void orientationChange(int orientationState) {
-        switch (orientationState) {
-            case ORIENTATION_VERTICAL:
-                // 竖屏
+    private void initVideo(int position) {
 
-                // 旋转屏幕
-                mOrientationUtil.setRequestedOrientation(this, ORIENTATION_VERTICAL);
-                break;
-
-            case ORIENTATION_HORIZONTAL_LEFT:
-                // 左横屏
-
-                // 旋转屏幕
-                mOrientationUtil.setRequestedOrientation(this, ORIENTATION_HORIZONTAL_LEFT);
-                break;
-
-            case ORIENTATION_HORIZONTAL_RIGHT:
-                // 右横屏
-
-                // 旋转屏幕
-                mOrientationUtil.setRequestedOrientation(this, ORIENTATION_HORIZONTAL_RIGHT);
-                break;
+        if (position < 0) {
+            position = getIntent().getIntExtra("position", 0);
         }
-    }
-
-    /**
-     * 匹配View
-     */
-    private void findView() {
-        rl_root = findViewById(R.id.rl_root);
-        ijk_video = new IjkPlayer(this, rl_root);
-    }
-
-    /**
-     * 处理数据
-     */
-    private void init() {
-        mPosition = getIntent().getIntExtra("position", 0);
+        mPosition = position;
 
         if (mFileList == null) {
             mFileList = new ArrayList<>();
         }
 
         if (mPosition >= mFileList.size()) {
-            return;
+            mPosition = mFileList.size() - 1;
         }
 
         mCurrentFile = mFileList.get(mPosition);
 
-        // 初始化播放器
-        initIjkPlayer();
-
-        // 初始化控制器
-        initController();
-    }
-
-    /**
-     * 初始化控制器
-     */
-    private void initController() {
-        mController = new NormalController(this, rl_root, ijk_video);
-    }
-
-    /**
-     * 初始化播放器
-     */
-    private void initIjkPlayer() {
-        //加载native库
-        try {
-            IjkMediaPlayer.loadLibrariesOnce(null);
-            IjkMediaPlayer.native_profileBegin("libijkplayer.so");
-        } catch (Exception e) {
-            this.finish();
-        }
-
-        // 初始化播放器监听
-        initIjkPlayerListener();
-
-        // 播放
-        rl_root.post(() -> play(mCurrentFile.getPath()));
-    }
-
-    /**
-     * 初始化播放器监听
-     */
-    private void initIjkPlayerListener() {
-        ijk_video.setListener(new VideoPlayerListener() {
-            @Override
-            public void onVideoSizeChanged(IMediaPlayer iMediaPlayer, int i, int i1, int i2, int i3) {
-                /*Log.i("-=-=-=-= Player", "onVideoSizeChanged"
-                        + "  i：" + i
-                        + "  i1：" + i1
-                        + "  i2：" + i2
-                        + "  i3：" + i3
-                );*/
-            }
-
-            @Override
-            public void onSeekComplete(IMediaPlayer iMediaPlayer) {
-                // Log.i("-=-=-=-= Player", "onSeekComplete");
-            }
-
-            @Override
-            public void onPrepared(IMediaPlayer iMediaPlayer) {
-                // Log.i("-=-=-=-= Player", "onPrepared");
-            }
-
-            @Override
-            public boolean onInfo(IMediaPlayer iMediaPlayer, int i, int i1) {
-                String info = "";
-                switch (i) {
-                    case 3:
-                        // 准备渲染
-                        info = "准备渲染";
-
-                        // 更新视频时长
-                        mController.updateDuration(mCurrentFile.getDuration());
-                        break;
-
-                    case 100:
-                        // 视频中断，一般是视频源异常或者不支持的视频类型。
-                        info = "视频中断，一般是视频源异常或者不支持的视频类型。";
-                        break;
-
-                    case 200:
-                        // 数据错误没有有效的回收
-                        info = "数据错误没有有效的回收";
-                        break;
-
-                    case 701:
-                        // 开始缓冲
-                        info = "开始缓冲";
-                        break;
-
-                    case 702:
-                        // 缓冲结束
-                        info = "缓冲结束";
-                        break;
-
-                    case 10000:
-                        // 一般是视频源有问题或者数据格式不支持，比如音频不是AAC之类的
-                        info = "一般是视频源有问题或者数据格式不支持，比如音频不是AAC之类的";
-                        break;
-
-                    case 10001:
-                        // 视频选择信息
-                        info = "视频选择信息";
-                        break;
-
-                    default:
-                        // 其他
-                        break;
-                }
-
-                // Log.i("-=-=-=-= Player", "onInfo   i：" + i + " " + info + "    i1：" + i1);
-
-                return false;
-            }
-
-            @Override
-            public boolean onError(IMediaPlayer iMediaPlayer, int i, int i1) {
-                /*Log.i("-=-=-=-= Player", "onError"
-                        + "  i：" + i
-                        + "  i1：" + i1
-                );*/
-                return false;
-            }
-
-            @Override
-            public void onCompletion(IMediaPlayer iMediaPlayer) {
-                // Log.i("-=-=-=-= Player", "onCompletion");
-            }
-
-            @Override
-            public void onBufferingUpdate(IMediaPlayer iMediaPlayer, int i) {
-                // Log.i("-=-=-=-= Player", "onBufferingUpdate  i：" + i);
-            }
-        });
+        play();
     }
 
     /**
      * 播放
      */
-    private void play(String path) {
+    private void play() {
 
-        mVideoBitmap = MediaUtil.getInstance().getFrame(path, 0);
+        mVideoBitmap = MediaUtil.getInstance().getFrame(mCurrentFile.getPath(), 0);
 
         new Thread(() -> {
             try {
@@ -344,19 +181,21 @@ public class VideoActivity extends BaseVideoActivity {
 
             rl_root.post(() -> {
                 // 处理播放器尺寸
-                initPlayerSize(mVideoBitmap.getWidth(), mVideoBitmap.getHeight());
+                // initPlayerSize(mVideoBitmap.getWidth(), mVideoBitmap.getHeight());
 
                 // 播放当前文件
-                ijk_video.setVideoPath(path);
+                gsy_video.setUp(mCurrentFile.getPath(), true, mCurrentFile.getName());
 
                 // 开始播放
-                mController.onPlay();
+                gsy_video.startPlayLogic();
 
-                // 更新视频文件名
-                mController.onUpdateFileName(mCurrentFile.getName());
+                if (mController != null) {
+                    // 更新视频文件名
+                    mController.onUpdateFileName(mCurrentFile.getName());
 
-                // 更新视频进度
-                mController.updateProgress(0);
+                    // 更新视频进度
+                    mController.updateProgress(0);
+                }
             });
         }).start();
     }
@@ -404,15 +243,125 @@ public class VideoActivity extends BaseVideoActivity {
                 + "  videoHeight：" + videoHeight
         );*/
 
-        RelativeLayout.LayoutParams layoutParams = (RelativeLayout.LayoutParams) ijk_video.surfaceView.getLayoutParams();
+        RelativeLayout.LayoutParams layoutParams = (RelativeLayout.LayoutParams) gsy_video.getLayoutParams();
         layoutParams.width = (int) videoWidth;
         layoutParams.height = (int) videoHeight;
         layoutParams.leftMargin = left;
         layoutParams.topMargin = top;
-        ijk_video.surfaceView.setLayoutParams(layoutParams);
+        gsy_video.setLayoutParams(layoutParams);
+    }
 
-        if (ijk_video.surfaceView.getParent() == null) {
-            rl_root.addView(ijk_video.surfaceView, 0);
+    // ============================================================================================
+    // ------------------------------ 以下是播放器的回调 -------------------------------------
+    // ============================================================================================
+
+
+    @Override
+    public void onPrepared() {
+        Log.i("-=-=-=-=  播放器回调", "onPrepared");
+    }
+
+    @Override
+    public void onAutoCompletion() {
+        Log.i("-=-=-=-=  播放器回调", "onAutoCompletion");
+    }
+
+    @Override
+    public void onCompletion() {
+        Log.i("-=-=-=-=  播放器回调", "onCompletion");
+    }
+
+    @Override
+    public void onBufferingUpdate(int percent) {
+        Log.i("-=-=-=-=  播放器回调", "onBufferingUpdate  " + percent);
+    }
+
+    @Override
+    public void onSeekComplete() {
+        Log.i("-=-=-=-=  播放器回调", "onSeekComplete");
+    }
+
+    @Override
+    public void onError(int what, int extra) {
+        Log.i("-=-=-=-=  播放器回调", "onError  what：" + what + "  extra：" + extra);
+    }
+
+    @Override
+    public void onInfo(int what, int extra) {
+
+        String info = "";
+        switch (what) {
+            case 3:
+                // 准备渲染
+                info = "准备渲染";
+
+                // 更新视频时长
+                if (mController != null) {
+                    mController.updateDuration(mCurrentFile.getDuration());
+                }
+                break;
+
+            case 100:
+                // 视频中断，一般是视频源异常或者不支持的视频类型。
+                info = "视频中断，一般是视频源异常或者不支持的视频类型。";
+                break;
+
+            case 200:
+                // 数据错误没有有效的回收
+                info = "数据错误没有有效的回收";
+                break;
+
+            case 701:
+                // 开始缓冲
+                info = "开始缓冲";
+                break;
+
+            case 702:
+                // 缓冲结束
+                info = "缓冲结束";
+                break;
+
+            case 10000:
+                // 一般是视频源有问题或者数据格式不支持，比如音频不是AAC之类的
+                info = "一般是视频源有问题或者数据格式不支持，比如音频不是AAC之类的";
+                break;
+
+            case 10001:
+                // 视频选择信息
+                info = "视频选择信息";
+                break;
+
+            default:
+                // 其他
+                break;
         }
+
+        // Log.i("-=-=-=-= Player", "onInfo   i：" + i + " " + info + "    i1：" + i1);
+        Log.i("-=-=-=-=  播放器回调", "onInfo  what：" + what + "  extra：" + extra + (NullUtil.isNull(info) ? "" : ("  " + info)));
+    }
+
+    @Override
+    public void onVideoSizeChanged() {
+        Log.i("-=-=-=-=  播放器回调", "onVideoSizeChanged");
+    }
+
+    @Override
+    public void onBackFullscreen() {
+        Log.i("-=-=-=-=  播放器回调", "onBackFullscreen");
+    }
+
+    @Override
+    public void onVideoPause() {
+        Log.i("-=-=-=-=  播放器回调", "onVideoPause");
+    }
+
+    @Override
+    public void onVideoResume() {
+        Log.i("-=-=-=-=  播放器回调", "onVideoResume");
+    }
+
+    @Override
+    public void onVideoResume(boolean seek) {
+        Log.i("-=-=-=-=  播放器回调", "onVideoResume  seek：" + seek);
     }
 }

@@ -5,17 +5,29 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.view.WindowInsets;
+import android.widget.RelativeLayout;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 import androidx.core.view.ViewCompat;
 
+import com.bamboy.bimage.page.video.controller.Controller;
+import com.bamboy.bimage.page.video.controller.NormalController;
 import com.bamboy.bimage.util.OrientationUtil;
+import com.shuyu.gsyvideoplayer.video.StandardGSYVideoPlayer;
+
+import static com.bamboy.bimage.util.OrientationUtil.ORIENTATION_HORIZONTAL_LEFT;
+import static com.bamboy.bimage.util.OrientationUtil.ORIENTATION_HORIZONTAL_RIGHT;
+import static com.bamboy.bimage.util.OrientationUtil.ORIENTATION_VERTICAL;
 
 public abstract class BaseVideoActivity extends AppCompatActivity {
 
     protected OrientationUtil mOrientationUtil;
+    /**
+     * 控制器
+     */
+    protected Controller mController;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -79,19 +91,41 @@ public abstract class BaseVideoActivity extends AppCompatActivity {
         mOrientationUtil.startOrientation(hasFocus);
     }
 
-    /*@Override
-    public void onConfigurationChanged(@NonNull Configuration newConfig) {
-        super.onConfigurationChanged(newConfig);
-        Log.i("-=-=-=-=", "onConfigurationChanged");
-        // 解决状态栏下拉后屏幕旋转监听开关的问题
-        // mOrientationUtil.startOrientation(this);
-    }*/
-
     /**
      * 屏幕方向改变
      *
      * @param orientationState 【1：ORIENTATION_VERTICAL：竖屏】
      *                         【2：ORIENTATION_HORIZONTAL_LEFT：左横屏】
      */
-    protected abstract void orientationChange(int orientationState);
+    protected void orientationChange(int orientationState){
+        switch (orientationState) {
+            case ORIENTATION_VERTICAL:
+                // 竖屏
+
+                // 旋转屏幕
+                mOrientationUtil.setRequestedOrientation(this, ORIENTATION_VERTICAL);
+                break;
+
+            case ORIENTATION_HORIZONTAL_LEFT:
+                // 左横屏
+
+                // 旋转屏幕
+                mOrientationUtil.setRequestedOrientation(this, ORIENTATION_HORIZONTAL_LEFT);
+                break;
+
+            case ORIENTATION_HORIZONTAL_RIGHT:
+                // 右横屏
+
+                // 旋转屏幕
+                mOrientationUtil.setRequestedOrientation(this, ORIENTATION_HORIZONTAL_RIGHT);
+                break;
+        }
+    }
+
+    /**
+     * 初始化控制器
+     */
+    protected void initController(RelativeLayout rl_root, StandardGSYVideoPlayer gsy_video) {
+        mController = new NormalController(this, rl_root, gsy_video);
+    }
 }

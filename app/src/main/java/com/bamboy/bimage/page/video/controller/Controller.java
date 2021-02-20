@@ -6,6 +6,8 @@ import android.widget.TextView;
 
 import com.bamboy.bimage.util.UIUtil;
 import com.bamboy.bimage.view.ijkplayer.IjkPlayer;
+import com.shuyu.gsyvideoplayer.video.StandardGSYVideoPlayer;
+import com.shuyu.gsyvideoplayer.video.base.GSYVideoView;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -16,7 +18,7 @@ public abstract class Controller extends ViewGroup {
     /**
      * 播放器
      */
-    protected IjkPlayer mIjk_video;
+    protected GSYVideoView mVideoPlayer;
     /**
      * 进度
      */
@@ -34,9 +36,9 @@ public abstract class Controller extends ViewGroup {
      */
     public long mDuration;
 
-    public Controller(Context context, IjkPlayer ijk_video) {
+    public Controller(Context context, GSYVideoView videoPlayer) {
         super(context);
-        init(context, ijk_video);
+        init(context, videoPlayer);
     }
 
     @Override
@@ -49,21 +51,21 @@ public abstract class Controller extends ViewGroup {
      *
      * @param context
      */
-    private void init(Context context, IjkPlayer ijk_video) {
+    private void init(Context context, GSYVideoView videoPlayer) {
         mContext = context;
-        mIjk_video = ijk_video;
+        mVideoPlayer = videoPlayer;
     }
 
     /**
      * 更新视频时长
      */
     public void updateDuration(long duration) {
-        if (mIjk_video == null) {
+        if (mVideoPlayer == null) {
             UIUtil.setText(tv_progress, "00:00");
             UIUtil.setText(tv_duration, "00:00");
             return;
         }
-        duration = Math.max(duration, mIjk_video.getDuration());
+        duration = Math.max(duration, mVideoPlayer.getDuration());
 
         if (duration <= 0) {
             UIUtil.setText(tv_progress, "00:00");

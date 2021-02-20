@@ -9,9 +9,10 @@
     <LinearLayout
         android:id="@+id/ll_top"
         android:layout_width="match_parent"
-        android:layout_height="48dp"
+        android:layout_height="wrap_content"
         android:background="@color/black_alpha_9"
-        android:orientation="horizontal">
+        android:orientation="horizontal"
+        android:paddingTop="20dp">
 
         <!-- 返回按钮 -->
         <com.bamboy.bimage.view.clickanimview.ClickAnimImageView
@@ -25,11 +26,11 @@
         <TextView
             android:id="@+id/tv_name"
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_vertical"
+            android:layout_height="48dp"
             android:layout_marginRight="5dp"
             android:layout_weight="1"
             android:ellipsize="end"
+            android:gravity="center_vertical"
             android:maxLines="1"
             android:textColor="@color/white"
             android:textSize="18sp"
@@ -81,7 +82,7 @@
                 android:textSize="18sp" />
 
             <!-- 进度条 -->
-            <com.bamboy.bimage.view.NowelSeekBar
+            <com.bamboy.bimage.view.VideoSeekBar
                 android:id="@+id/nsp_progress"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"

@@ -6,7 +6,6 @@ import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.RectF;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 
@@ -14,7 +13,7 @@ import androidx.annotation.Nullable;
 
 import com.bamboy.bimage.R;
 
-public class NowelSeekBar extends View {
+public class VideoSeekBar extends View {
 
     /**
      * 进度改变时的监听
@@ -69,17 +68,17 @@ public class NowelSeekBar extends View {
     private int mUnfinishedColor;
     private float endRight;
 
-    public NowelSeekBar(Context context) {
+    public VideoSeekBar(Context context) {
         super(context);
         initAttr(context, null);
     }
 
-    public NowelSeekBar(Context context, @Nullable AttributeSet attrs) {
+    public VideoSeekBar(Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
         initAttr(context, attrs);
     }
 
-    public NowelSeekBar(Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
+    public VideoSeekBar(Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
         initAttr(context, attrs);
     }
@@ -521,6 +520,6 @@ public class NowelSeekBar extends View {
          * @param progressBar
          * @param progress
          */
-        void onProgress(NowelSeekBar progressBar, long progress);
+        void onProgress(VideoSeekBar progressBar, long progress);
     }
 }
