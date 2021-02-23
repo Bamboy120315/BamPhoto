@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/rl_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:alpha="0"
+    android:background="@color/black_alpha_9">
+
+    <androidx.cardview.widget.CardView
+        android:id="@+id/cv_item_view"
+        android:layout_width="1dp"
+        android:layout_height="1dp"
+        android:alpha="0"
+        app:cardBackgroundColor="@color/transparent"
+        app:cardCornerRadius="5dp"
+        app:cardElevation="0dp">
+
+        <View
+            android:id="@+id/v_item_view"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+    </androidx.cardview.widget.CardView>
+
+    <!-- 重命名 -->
+    <ImageView
+        android:id="@+id/iv_rename"
+        android:layout_width="35dp"
+        android:layout_height="35dp"
+        android:alpha="0"
+        android:background="@drawable/btn_solid_white_bg"
+        android:padding="9dp"
+        android:rotation="-180"
+        android:scaleX="0"
+        android:scaleY="0"
+        android:src="@drawable/ic_rename" />
+
+    <!-- 隐私 -->
+    <ImageView
+        android:id="@+id/iv_private"
+        android:layout_width="35dp"
+        android:layout_height="35dp"
+        android:alpha="0"
+        android:background="@drawable/btn_solid_white_bg"
+        android:padding="9dp"
+        android:rotation="-180"
+        android:scaleX="0"
+        android:scaleY="0"
+        android:src="@drawable/ic_private" />
+
+    <!-- 删除 -->
+    <ImageView
+        android:id="@+id/iv_delete"
+        android:layout_width="35dp"
+        android:layout_height="35dp"
+        android:alpha="0"
+        android:background="@drawable/btn_solid_white_bg"
+        android:padding="9dp"
+        android:rotation="-180"
+        android:scaleX="0"
+        android:scaleY="0"
+        android:src="@drawable/ic_delete" />
+
+</FrameLayout>

@@ -95,6 +95,8 @@ public class FItemDir extends FreedomBean {
             vh.rl_root.setOnClickListener((View view) ->
                     getCallback(context).onClickCallback(vh.rl_root, position, vh));
 
+            vh.rl_root.setOnLongClickListener((View view) ->
+                    getLongClickCallback(context).onLongClickCallback(vh.rl_root, position, vh));
         });
     }
 

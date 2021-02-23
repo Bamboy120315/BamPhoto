@@ -28,6 +28,10 @@ public abstract class FreedomBean implements Serializable {
      * 点击事件Callback
      */
     private FreedomCallback callback;
+    /**
+     * 长按事件Callback
+     */
+    private FreedomLongClickCallback longClickCallback;
 
     /**
      * 构造函数
@@ -81,6 +85,27 @@ public abstract class FreedomBean implements Serializable {
             }
         }
         return callback;
+    }
+
+    public void setLongClickCallback(FreedomLongClickCallback longClickCallback) {
+        this.longClickCallback = longClickCallback;
+    }
+
+    public FreedomLongClickCallback getLongClickCallback() {
+        return getLongClickCallback(null);
+    }
+
+    public FreedomLongClickCallback getLongClickCallback(Context context) {
+        if (longClickCallback == null) {
+            if (context != null && context instanceof FreedomCallback) {
+                longClickCallback = (FreedomLongClickCallback) context;
+            } else {
+                Log.e("FreedomError", "Activity:[" + context.getClass() + "]未实现【FreedomLongClickCallback】接口！\n" +
+                        "java.lang.NullPointerException:\n" +
+                        "\t[" + context.getClass() + "]未实现【FreedomLongClickCallback】接口！\n");
+            }
+        }
+        return longClickCallback;
     }
 
     public void bindViewHolder(Context context, ViewHolderManager.ViewHolder viewHolder, int position) {

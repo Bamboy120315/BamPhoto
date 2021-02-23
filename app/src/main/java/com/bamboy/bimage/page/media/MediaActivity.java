@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
+import android.view.Gravity;
 import android.view.View;
 
 import androidx.annotation.NonNull;
@@ -16,12 +17,15 @@ import com.bamboy.bimage.R;
 import com.bamboy.bimage.page.base.BaseActivity;
 import com.bamboy.bimage.page.media.bean.DirectoryBean;
 import com.bamboy.bimage.page.media.fitem.FItemDir;
+import com.bamboy.bimage.page.media.menu.PhotoMenuPopupWindow;
 import com.bamboy.bimage.page.photolist.PhotoListActivity;
 import com.bamboy.bimage.page.videolist.VideoListActivity;
 import com.bamboy.bimage.util.MediaUtil;
+import com.bamboy.bimage.view.clickanimview.ClickAnimRelativeLayout;
 import com.bamboy.bimage.view.freedom.freedom.FreedomAdapter;
 import com.bamboy.bimage.view.freedom.freedom.FreedomBean;
 import com.bamboy.bimage.view.freedom.freedom.FreedomCallback;
+import com.bamboy.bimage.view.freedom.freedom.FreedomLongClickCallback;
 import com.bamboy.bimage.view.freedom.freedom.ViewHolderManager;
 import com.bamboy.bimage.view.freedom.smartrefresh.SmartRefreshLayout;
 import com.bamboy.bimage.view.freedom.smartrefresh.api.RefreshLayout;
@@ -30,7 +34,7 @@ import com.bamboy.bimage.view.toast.BamToast;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MediaActivity extends BaseActivity implements FreedomCallback {
+public class MediaActivity extends BaseActivity implements FreedomCallback, FreedomLongClickCallback {
 
     /**
      * 媒体类型
@@ -55,6 +59,11 @@ public class MediaActivity extends BaseActivity implements FreedomCallback {
      * 数据源
      */
     public List<FreedomBean> mList;
+
+    /**
+     * 菜单弹窗
+     */
+    public PhotoMenuPopupWindow mMenuPopupWindow;
 
     /**
      * 刷新回调
@@ -83,6 +92,15 @@ public class MediaActivity extends BaseActivity implements FreedomCallback {
 
         // 初始化下拉刷新
         initRefreshLayout();
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (mMenuPopupWindow != null) {
+            mMenuPopupWindow.dismiss();
+            return;
+        }
+        super.onBackPressed();
     }
 
     /**
@@ -237,5 +255,25 @@ public class MediaActivity extends BaseActivity implements FreedomCallback {
             intent.putExtra("dir_name", fItemDir.getDirectoryBean().getName());
             startActivity(intent);
         }
+    }
+
+    @Override
+    public boolean onLongClickCallback(View view, int position, ViewHolderManager.ViewHolder holder) {
+        FreedomBean freedomBean = mList.get(position);
+        if (freedomBean instanceof FItemDir) {
+
+            // 长按成功，立刻执行抬起动画
+            if (view instanceof ClickAnimRelativeLayout) {
+                ((ClickAnimRelativeLayout) view).actionUp();
+            }
+
+            // 处理菜单弹窗
+            mMenuPopupWindow = new PhotoMenuPopupWindow(this, view, false);
+            mMenuPopupWindow.setOnDismissListener(() -> mMenuPopupWindow = null);
+            mMenuPopupWindow.showAtLocation(view, Gravity.NO_GRAVITY, 0, 0);
+            return true;
+        }
+
+        return false;
     }
 }

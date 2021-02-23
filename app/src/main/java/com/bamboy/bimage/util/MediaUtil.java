@@ -48,6 +48,7 @@ public class MediaUtil {
         imageTypes.add("png");
         imageTypes.add("jpg");
         imageTypes.add("jpeg");
+        imageTypes.add("gif");
 
         // 支持的视频格式
         videoTypes = new ArrayList<>();

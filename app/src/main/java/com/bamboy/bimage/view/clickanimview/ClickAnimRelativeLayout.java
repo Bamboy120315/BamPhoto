@@ -108,4 +108,11 @@ public class ClickAnimRelativeLayout extends RelativeLayout {
 
 		return super.onTouchEvent(event);
 	}
+
+	/**
+	 * 模拟抬起手指
+	 */
+	public void actionUp() {
+		BamAnim.startAnimUp(this, pivot);
+	}
 }

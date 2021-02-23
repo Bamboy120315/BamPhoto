@@ -72,7 +72,6 @@ public class FItemPhoto extends FreedomBean {
 
             vh.rl_root.setOnClickListener((View view) ->
                     getCallback(context).onClickCallback(vh.rl_root, position, vh));
-
         });
     }
 

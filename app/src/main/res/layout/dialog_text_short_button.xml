@@ -36,7 +36,7 @@
         android:layout_below="@+id/tv_content"
         android:layout_centerHorizontal="true"
         android:layout_marginTop="30dp"
-        android:background="@drawable/btn_solid_bg"
+        android:background="@drawable/btn_solid_white_bg"
         android:paddingHorizontal="30dp"
         android:text="我知道了"
         android:textColor="@color/white"
