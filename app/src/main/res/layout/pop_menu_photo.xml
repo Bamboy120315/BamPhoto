@@ -23,7 +23,7 @@
     </androidx.cardview.widget.CardView>
 
     <!-- 重命名 -->
-    <ImageView
+    <com.bamboy.bimage.view.clickanimview.ClickAnimImageView
         android:id="@+id/iv_rename"
         android:layout_width="35dp"
         android:layout_height="35dp"
@@ -36,7 +36,7 @@
         android:src="@drawable/ic_rename" />
 
     <!-- 隐私 -->
-    <ImageView
+    <com.bamboy.bimage.view.clickanimview.ClickAnimImageView
         android:id="@+id/iv_private"
         android:layout_width="35dp"
         android:layout_height="35dp"
@@ -49,7 +49,7 @@
         android:src="@drawable/ic_private" />
 
     <!-- 删除 -->
-    <ImageView
+    <com.bamboy.bimage.view.clickanimview.ClickAnimImageView
         android:id="@+id/iv_delete"
         android:layout_width="35dp"
         android:layout_height="35dp"

@@ -1,64 +1,145 @@
 package com.bamboy.bimage.page.media.menu;
 
+import android.content.Context;
+import android.util.DisplayMetrics;
+import android.view.View;
+import android.view.WindowManager;
+
 import java.util.HashMap;
 import java.util.Map;
 
 public class MenuLocationUtil {
     /**
+     * 上下文
+     */
+    private Context context;
+    /**
+     * 按钮View
+     */
+    private View btnView;
+    /**
+     * 占位View宽度
+     */
+    private float itemViewWidth;
+    /**
+     * 占位View高度
+     */
+    private float itemViewHeight;
+    /**
+     * 屏幕宽度
+     */
+    private float displayWidth;
+    /**
+     * 屏幕高度
+     */
+    private float displayHeight;
+    /**
      * 参数 占位View X坐标
      */
-    public final static String PARAM_ITEMVIEW_X = "itemViewX";
+    private int[] itemViewLocation;
+    private float marginLeft, marginTop, marginRight, marginBottom, btnWidth, btnHeight, btnMargin;
+
+    public MenuLocationUtil(Context context, View btnView, float itemViewWidth, float itemViewHeight, int[] itemViewLocation) {
+        this.context = context;
+        this.btnView = btnView;
+        this.itemViewWidth = itemViewWidth;
+        this.itemViewHeight = itemViewHeight;
+        this.itemViewLocation = itemViewLocation;
+
+        WindowManager wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
+        DisplayMetrics dm = new DisplayMetrics();
+        wm.getDefaultDisplay().getMetrics(dm);
+        // 屏幕宽度
+        displayWidth = dm.widthPixels;
+        // 屏幕高度
+        displayHeight = dm.heightPixels;
+
+        marginLeft = itemViewLocation[0];
+        marginTop = itemViewLocation[1];
+        marginRight = (int) (displayWidth - (itemViewLocation[0] + itemViewWidth));
+        marginBottom = (int) (displayHeight - (itemViewLocation[1] + itemViewHeight));
+
+        btnWidth = btnView.getWidth();
+        btnHeight = btnView.getHeight();
+        btnMargin = btnWidth * 0.25f;
+    }
+
     /**
-     * 参数 占位View Y坐标
+     * 初始化位置数据
+     *
+     * @return
      */
-    public final static String PARAM_ITEMVIEW_Y = "itemViewY";
-    /**
-     * 参数 占位View 宽
-     */
-    public final static String PARAM_ITEMVIEW_WIDTH = "itemViewWidth";
-    /**
-     * 参数 占位View 高
-     */
-    public final static String PARAM_ITEMVIEW_HEIGHT = "itemViewHeight";
-    /**
-     * 参数 菜单按钮 宽
-     */
-    public final static String PARAM_BTN_WIDTH = "btnWidth";
-    /**
-     * 参数 菜单按钮 高
-     */
-    public final static String PARAM_BTN_HEIGHT = "btnHeight";
-    /**
-     * 参数 菜单按钮 间距
-     */
-    public final static String PARAM_BTN_MARGIN = "btnMargin";
-    /**
-     * 参数 顶部的空间
-     */
-    public final static String PARAM_MARGIN_TOP = "marginTop";
-    /**
-     * 参数 底部的空间
-     */
-    public final static String PARAM_MARGIN_BOTTOM = "marginBottom";
+    public Map<String, Integer> initMenuLocation() {
+        Map<String, Integer> locationParam;
+
+        if (marginLeft > btnWidth && marginRight > btnWidth && Math.abs(marginLeft - marginRight) < displayWidth * 0.5) {
+            // 上下模式
+
+            if (itemViewLocation[1] > (displayHeight - itemViewLocation[1])) {
+                // 上边
+                locationParam = getInfoToTop();
+            } else {
+                // 下边
+                locationParam = getInfoToBottom();
+            }
+        } else if (marginTop > btnWidth && marginBottom > btnWidth && Math.abs(itemViewLocation[1] - (displayHeight - itemViewLocation[1])) < displayHeight * 0.58) {
+            // 左右模式
+
+            if (marginLeft > marginRight) {
+                // 左边
+                locationParam = getInfoToLeft();
+            } else {
+                // 右边
+                locationParam = getInfoToRight();
+            }
+        } else if (itemViewHeight > btnHeight * 5 && marginTop > 0 - btnHeight * 3 && (displayHeight - itemViewLocation[1]) > btnHeight * 4) {
+            // 左右模式
+
+            if (marginLeft > marginRight) {
+                // 左边
+                locationParam = getInfoToLeft();
+            } else {
+                // 右边
+                locationParam = getInfoToRight();
+            }
+        } else if (marginLeft > marginRight) {
+            if (marginTop > marginBottom) {
+                // 四角模式  左上方
+                locationParam = getInfoToLeftTop();
+            } else {
+                // 四角模式  左下方
+                locationParam = getInfoToLeftBottom();
+            }
+        } else {
+            if (marginTop > marginBottom) {
+                // 四角模式  右上方
+                locationParam = getInfoToRightTop();
+            } else {
+                // 四角模式  右下方
+                locationParam = getInfoToRightBottom();
+            }
+        }
+
+        return locationParam;
+    }
 
     /**
      * 获取位置信息 --> 上边
      *
-     * @param param
      * @return
      */
-    public static Map<String, Integer> getInfoToTop(Map<String, Float> param) {
+    private Map<String, Integer> getInfoToTop() {
         // 隐私按钮坐标
-        float privateLeft = param.get(PARAM_ITEMVIEW_X) + param.get(PARAM_ITEMVIEW_WIDTH) / 2 - param.get(PARAM_BTN_WIDTH) / 2;
-        float privateTop = param.get(PARAM_ITEMVIEW_Y) - param.get(PARAM_BTN_HEIGHT) - param.get(PARAM_BTN_MARGIN) * 3;
+        float privateLeft = itemViewLocation[0] + itemViewWidth / 2 - btnWidth / 2;
+        float privateTop = itemViewLocation[1] - btnHeight - btnMargin * 3;
 
         // 重命名按钮坐标
-        float renameLeft = privateLeft - param.get(PARAM_BTN_WIDTH) - param.get(PARAM_BTN_MARGIN);
-        float renameTop = privateTop + param.get(PARAM_BTN_MARGIN) * 2;
+        float renameLeft = privateLeft - btnWidth - btnMargin;
+        float renameTop = privateTop + btnMargin * 2;
 
         // 删除按钮坐标
-        float deleteLeft = privateLeft + param.get(PARAM_BTN_WIDTH) + param.get(PARAM_BTN_MARGIN);
-        float deleteTop = privateTop + param.get(PARAM_BTN_MARGIN) * 2;
+        float deleteLeft = privateLeft + btnWidth + btnMargin;
+        float deleteTop = privateTop + btnMargin * 2;
 
         return getMap(renameLeft, renameTop, privateLeft, privateTop, deleteLeft, deleteTop);
     }
@@ -66,21 +147,20 @@ public class MenuLocationUtil {
     /**
      * 获取位置信息 --> 下边
      *
-     * @param param
      * @return
      */
-    public static Map<String, Integer> getInfoToBottom(Map<String, Float> param) {
+    private Map<String, Integer> getInfoToBottom() {
         // 隐私按钮坐标
-        float privateLeft = param.get(PARAM_ITEMVIEW_X) + param.get(PARAM_ITEMVIEW_WIDTH) / 2 - param.get(PARAM_BTN_WIDTH) / 2;
-        float privateTop = param.get(PARAM_ITEMVIEW_Y) + param.get(PARAM_ITEMVIEW_HEIGHT) + param.get(PARAM_BTN_MARGIN) * 3;
+        float privateLeft = itemViewLocation[0] + itemViewWidth / 2 - btnWidth / 2;
+        float privateTop = itemViewLocation[1] + itemViewHeight + btnMargin * 3;
 
         // 重命名按钮坐标
-        float renameLeft = privateLeft - param.get(PARAM_BTN_WIDTH) - param.get(PARAM_BTN_MARGIN);
-        float renameTop = privateTop - param.get(PARAM_BTN_MARGIN) * 2;
+        float renameLeft = privateLeft - btnWidth - btnMargin;
+        float renameTop = privateTop - btnMargin * 2;
 
         // 删除按钮坐标
-        float deleteLeft = privateLeft + param.get(PARAM_BTN_WIDTH) + param.get(PARAM_BTN_MARGIN);
-        float deleteTop = privateTop - param.get(PARAM_BTN_MARGIN) * 2;
+        float deleteLeft = privateLeft + btnWidth + btnMargin;
+        float deleteTop = privateTop - btnMargin * 2;
 
         return getMap(renameLeft, renameTop, privateLeft, privateTop, deleteLeft, deleteTop);
     }
@@ -88,29 +168,28 @@ public class MenuLocationUtil {
     /**
      * 获取位置信息 --> 左边
      *
-     * @param param
      * @return
      */
-    public static Map<String, Integer> getInfoToLeft(Map<String, Float> param) {
+    private Map<String, Integer> getInfoToLeft() {
         // 显示菜单的空间
-        float menuSpaceHeight = param.get(PARAM_ITEMVIEW_HEIGHT);
-        if (param.get(PARAM_MARGIN_TOP) < 0) {
-            menuSpaceHeight += Math.abs(param.get(PARAM_MARGIN_TOP));
-        } else if (param.get(PARAM_MARGIN_BOTTOM) < 0) {
-            menuSpaceHeight -= Math.abs(param.get(PARAM_MARGIN_BOTTOM));
+        float menuSpaceHeight = itemViewHeight;
+        if (marginTop < 0) {
+            menuSpaceHeight += Math.abs(marginTop);
+        } else if (marginBottom < 0) {
+            menuSpaceHeight -= Math.abs(marginBottom);
         }
 
         // 隐私按钮坐标
-        float privateLeft = param.get(PARAM_ITEMVIEW_X) - param.get(PARAM_BTN_WIDTH) - param.get(PARAM_BTN_MARGIN) * 3;
-        float privateTop = param.get(PARAM_ITEMVIEW_Y) + menuSpaceHeight / 2 - param.get(PARAM_BTN_HEIGHT) / 2;
+        float privateLeft = itemViewLocation[0] - btnWidth - btnMargin * 3;
+        float privateTop = itemViewLocation[1] + menuSpaceHeight / 2 - btnHeight / 2;
 
         // 重命名按钮坐标
-        float renameLeft = privateLeft + param.get(PARAM_BTN_MARGIN) * 2;
-        float renameTop = privateTop - param.get(PARAM_BTN_HEIGHT) - param.get(PARAM_BTN_MARGIN);
+        float renameLeft = privateLeft + btnMargin * 2;
+        float renameTop = privateTop - btnHeight - btnMargin;
 
         // 删除按钮坐标
-        float deleteLeft = privateLeft + param.get(PARAM_BTN_MARGIN) * 2;
-        float deleteTop = privateTop + param.get(PARAM_BTN_HEIGHT) + param.get(PARAM_BTN_MARGIN);
+        float deleteLeft = privateLeft + btnMargin * 2;
+        float deleteTop = privateTop + btnHeight + btnMargin;
 
         return getMap(renameLeft, renameTop, privateLeft, privateTop, deleteLeft, deleteTop);
     }
@@ -118,29 +197,28 @@ public class MenuLocationUtil {
     /**
      * 获取位置信息 --> 右边
      *
-     * @param param
      * @return
      */
-    public static Map<String, Integer> getInfoToRight(Map<String, Float> param) {
+    private Map<String, Integer> getInfoToRight() {
         // 显示菜单的空间
-        float menuSpaceHeight = param.get(PARAM_ITEMVIEW_HEIGHT);
-        if (param.get(PARAM_MARGIN_TOP) < 0) {
-            menuSpaceHeight += Math.abs(param.get(PARAM_MARGIN_TOP));
-        } else if (param.get(PARAM_MARGIN_BOTTOM) < 0) {
-            menuSpaceHeight -= Math.abs(param.get(PARAM_MARGIN_BOTTOM));
+        float menuSpaceHeight = itemViewHeight;
+        if (marginTop < 0) {
+            menuSpaceHeight += Math.abs(marginTop);
+        } else if (marginBottom < 0) {
+            menuSpaceHeight -= Math.abs(marginBottom);
         }
 
         // 隐私按钮坐标
-        float privateLeft = param.get(PARAM_ITEMVIEW_X) + param.get(PARAM_ITEMVIEW_WIDTH) + param.get(PARAM_BTN_MARGIN) * 3;
-        float privateTop = param.get(PARAM_ITEMVIEW_Y) + menuSpaceHeight / 2 - param.get(PARAM_BTN_HEIGHT) / 2;
+        float privateLeft = itemViewLocation[0] + itemViewWidth + btnMargin * 3;
+        float privateTop = itemViewLocation[1] + menuSpaceHeight / 2 - btnHeight / 2;
 
         // 重命名按钮坐标
-        float renameLeft = privateLeft - param.get(PARAM_BTN_MARGIN) * 2;
-        float renameTop = privateTop - param.get(PARAM_BTN_HEIGHT) - param.get(PARAM_BTN_MARGIN);
+        float renameLeft = privateLeft - btnMargin * 2;
+        float renameTop = privateTop - btnHeight - btnMargin;
 
         // 删除按钮坐标
-        float deleteLeft = privateLeft - param.get(PARAM_BTN_MARGIN) * 2;
-        float deleteTop = privateTop + param.get(PARAM_BTN_HEIGHT) + param.get(PARAM_BTN_MARGIN);
+        float deleteLeft = privateLeft - btnMargin * 2;
+        float deleteTop = privateTop + btnHeight + btnMargin;
 
         return getMap(renameLeft, renameTop, privateLeft, privateTop, deleteLeft, deleteTop);
     }
@@ -148,21 +226,20 @@ public class MenuLocationUtil {
     /**
      * 获取位置信息 --> 左上
      *
-     * @param param
      * @return
      */
-    public static Map<String, Integer> getInfoToLeftTop(Map<String, Float> param) {
+    private Map<String, Integer> getInfoToLeftTop() {
         // 隐私按钮坐标
-        float privateLeft = param.get(PARAM_ITEMVIEW_X) - param.get(PARAM_BTN_WIDTH);
-        float privateTop = param.get(PARAM_ITEMVIEW_Y) - param.get(PARAM_BTN_HEIGHT);
+        float privateLeft = itemViewLocation[0] - btnWidth;
+        float privateTop = itemViewLocation[1] - btnHeight;
 
         // 重命名按钮坐标
-        float renameLeft = privateLeft - param.get(PARAM_BTN_MARGIN);
-        float renameTop = privateTop + param.get(PARAM_BTN_HEIGHT) + param.get(PARAM_BTN_MARGIN);
+        float renameLeft = privateLeft - btnMargin;
+        float renameTop = privateTop + btnHeight + btnMargin;
 
         // 删除按钮坐标
-        float deleteLeft = privateLeft + param.get(PARAM_BTN_WIDTH) + param.get(PARAM_BTN_MARGIN);
-        float deleteTop = privateTop - param.get(PARAM_BTN_MARGIN);
+        float deleteLeft = privateLeft + btnWidth + btnMargin;
+        float deleteTop = privateTop - btnMargin;
 
         return getMap(renameLeft, renameTop, privateLeft, privateTop, deleteLeft, deleteTop);
     }
@@ -170,21 +247,20 @@ public class MenuLocationUtil {
     /**
      * 获取位置信息 --> 左下
      *
-     * @param param
      * @return
      */
-    public static Map<String, Integer> getInfoToLeftBottom(Map<String, Float> param) {
+    private Map<String, Integer> getInfoToLeftBottom() {
         // 隐私按钮坐标
-        float privateLeft = param.get(PARAM_ITEMVIEW_X) - param.get(PARAM_BTN_WIDTH);
-        float privateTop = param.get(PARAM_ITEMVIEW_Y) + param.get(PARAM_ITEMVIEW_HEIGHT);
+        float privateLeft = itemViewLocation[0] - btnWidth;
+        float privateTop = itemViewLocation[1] + itemViewHeight;
 
         // 重命名按钮坐标
-        float renameLeft = privateLeft - param.get(PARAM_BTN_MARGIN);
-        float renameTop = privateTop - param.get(PARAM_BTN_HEIGHT) - param.get(PARAM_BTN_MARGIN);
+        float renameLeft = privateLeft - btnMargin;
+        float renameTop = privateTop - btnHeight - btnMargin;
 
         // 删除按钮坐标
-        float deleteLeft = privateLeft + param.get(PARAM_BTN_WIDTH) + param.get(PARAM_BTN_MARGIN);
-        float deleteTop = privateTop + param.get(PARAM_BTN_MARGIN);
+        float deleteLeft = privateLeft + btnWidth + btnMargin;
+        float deleteTop = privateTop + btnMargin;
 
         return getMap(renameLeft, renameTop, privateLeft, privateTop, deleteLeft, deleteTop);
     }
@@ -192,21 +268,20 @@ public class MenuLocationUtil {
     /**
      * 获取位置信息 --> 右上
      *
-     * @param param
      * @return
      */
-    public static Map<String, Integer> getInfoToRightTop(Map<String, Float> param) {
+    private Map<String, Integer> getInfoToRightTop() {
         // 隐私按钮坐标
-        float privateLeft = param.get(PARAM_ITEMVIEW_X) + param.get(PARAM_ITEMVIEW_WIDTH);
-        float privateTop = param.get(PARAM_ITEMVIEW_Y) - param.get(PARAM_BTN_HEIGHT);
+        float privateLeft = itemViewLocation[0] + itemViewWidth;
+        float privateTop = itemViewLocation[1] - btnHeight;
 
         // 重命名按钮坐标
-        float renameLeft = privateLeft - param.get(PARAM_BTN_WIDTH) - param.get(PARAM_BTN_MARGIN);
-        float renameTop = privateTop - param.get(PARAM_BTN_MARGIN);
+        float renameLeft = privateLeft - btnWidth - btnMargin;
+        float renameTop = privateTop - btnMargin;
 
         // 删除按钮坐标
-        float deleteLeft = privateLeft + param.get(PARAM_BTN_MARGIN);
-        float deleteTop = privateTop + param.get(PARAM_BTN_HEIGHT) + param.get(PARAM_BTN_MARGIN);
+        float deleteLeft = privateLeft + btnMargin;
+        float deleteTop = privateTop + btnHeight + btnMargin;
 
         return getMap(renameLeft, renameTop, privateLeft, privateTop, deleteLeft, deleteTop);
     }
@@ -214,21 +289,20 @@ public class MenuLocationUtil {
     /**
      * 获取位置信息 --> 右下
      *
-     * @param param
      * @return
      */
-    public static Map<String, Integer> getInfoToRightBottom(Map<String, Float> param) {
+    private Map<String, Integer> getInfoToRightBottom() {
         // 隐私按钮坐标
-        float privateLeft = param.get(PARAM_ITEMVIEW_X) + param.get(PARAM_ITEMVIEW_WIDTH);
-        float privateTop = param.get(PARAM_ITEMVIEW_Y) + param.get(PARAM_ITEMVIEW_HEIGHT);
+        float privateLeft = itemViewLocation[0] + itemViewWidth;
+        float privateTop = itemViewLocation[1] + itemViewHeight;
 
         // 重命名按钮坐标
-        float renameLeft = privateLeft + param.get(PARAM_BTN_MARGIN);
-        float renameTop = privateTop - param.get(PARAM_BTN_HEIGHT) - param.get(PARAM_BTN_MARGIN);
+        float renameLeft = privateLeft + btnMargin;
+        float renameTop = privateTop - btnHeight - btnMargin;
 
         // 删除按钮坐标
-        float deleteLeft = privateLeft - param.get(PARAM_BTN_WIDTH) - param.get(PARAM_BTN_MARGIN);
-        float deleteTop = privateTop + param.get(PARAM_BTN_MARGIN);
+        float deleteLeft = privateLeft - btnWidth - btnMargin;
+        float deleteTop = privateTop + btnMargin;
 
         return getMap(renameLeft, renameTop, privateLeft, privateTop, deleteLeft, deleteTop);
     }

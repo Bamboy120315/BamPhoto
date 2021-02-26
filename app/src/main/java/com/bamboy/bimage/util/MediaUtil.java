@@ -7,7 +7,6 @@ import android.graphics.Bitmap;
 import android.media.MediaMetadataRetriever;
 import android.os.Handler;
 import android.provider.MediaStore;
-import android.util.Log;
 
 import com.bamboy.bimage.page.media.bean.DirectoryBean;
 import com.bamboy.bimage.page.media.bean.FileBean;
@@ -122,11 +121,11 @@ public class MediaUtil {
         }
         cursor.close();
 
-        if (mediaType == 2) {
+        /*if (mediaType == 2) {
             for (DirectoryBean dir : dirList) {
                 // dir.initVideoBitmap();
             }
-        }
+        }*/
 
         handler.sendEmptyMessage(1);
     }
@@ -177,6 +176,11 @@ public class MediaUtil {
 
         // 媒体父文件夹路径
         String directoryPath = directory.getAbsolutePath();
+
+        // 如果是隐藏文件
+        /*if (isLockFiledir(directoryPath)) {
+            return;
+        }*/
 
         // 处理文件夹对象
         DirectoryBean directoryBean = getDirectory(directoryPath);

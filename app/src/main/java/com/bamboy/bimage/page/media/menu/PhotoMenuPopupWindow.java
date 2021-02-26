@@ -3,11 +3,9 @@ package com.bamboy.bimage.page.media.menu;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.content.Context;
-import android.util.DisplayMetrics;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.WindowManager;
 import android.view.animation.OvershootInterpolator;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
@@ -18,18 +16,8 @@ import com.bamboy.bimage.util.AnimationUtil;
 import com.bamboy.bimage.util.BlurUtil;
 import com.bamboy.bimage.util.UIUtil;
 
-import java.util.HashMap;
 import java.util.Map;
 
-import static com.bamboy.bimage.page.media.menu.MenuLocationUtil.PARAM_BTN_HEIGHT;
-import static com.bamboy.bimage.page.media.menu.MenuLocationUtil.PARAM_BTN_MARGIN;
-import static com.bamboy.bimage.page.media.menu.MenuLocationUtil.PARAM_BTN_WIDTH;
-import static com.bamboy.bimage.page.media.menu.MenuLocationUtil.PARAM_ITEMVIEW_HEIGHT;
-import static com.bamboy.bimage.page.media.menu.MenuLocationUtil.PARAM_ITEMVIEW_WIDTH;
-import static com.bamboy.bimage.page.media.menu.MenuLocationUtil.PARAM_ITEMVIEW_X;
-import static com.bamboy.bimage.page.media.menu.MenuLocationUtil.PARAM_ITEMVIEW_Y;
-import static com.bamboy.bimage.page.media.menu.MenuLocationUtil.PARAM_MARGIN_BOTTOM;
-import static com.bamboy.bimage.page.media.menu.MenuLocationUtil.PARAM_MARGIN_TOP;
 import static com.bamboy.bimage.view.clickanimview.BamAnim.ANIM_SPEED;
 
 public class PhotoMenuPopupWindow extends PopupWindow {
@@ -38,6 +26,10 @@ public class PhotoMenuPopupWindow extends PopupWindow {
      * 上下文
      */
     private Context mContext;
+    /**
+     * 索引
+     */
+    private int mPosition;
     /**
      * 条目View
      */
@@ -70,6 +62,10 @@ public class PhotoMenuPopupWindow extends PopupWindow {
      * 删除图标
      */
     private ImageView iv_delete;
+    /**
+     * 回调
+     */
+    private MenuCallback mCallback;
 
     /**
      * 构造
@@ -78,10 +74,12 @@ public class PhotoMenuPopupWindow extends PopupWindow {
      * @param itemView  条目View
      * @param isPrivate 是否是隐私条目
      */
-    public PhotoMenuPopupWindow(Context context, View itemView, boolean isPrivate) {
+    public PhotoMenuPopupWindow(Context context, int position, View itemView, boolean isPrivate, MenuCallback callback) {
         mContext = context;
+        mPosition = position;
         mItemView = itemView;
         mIsPrivate = isPrivate;
+        mCallback = callback;
 
         init();
     }
@@ -177,82 +175,7 @@ public class PhotoMenuPopupWindow extends PopupWindow {
      * @param itemViewLocation
      */
     private void initLocationToMenu(float itemViewWidth, float itemViewHeight, int[] itemViewLocation) {
-        WindowManager wm = (WindowManager) mContext.getSystemService(Context.WINDOW_SERVICE);
-        DisplayMetrics dm = new DisplayMetrics();
-        wm.getDefaultDisplay().getMetrics(dm);
-        // 屏幕宽度
-        int displayWidth = dm.widthPixels;
-        // 屏幕高度
-        int displayHeight = dm.heightPixels;
-
-        int marginLeft = itemViewLocation[0];
-        int marginTop = itemViewLocation[1];
-        int marginRight = (int) (displayWidth - (itemViewLocation[0] + itemViewWidth));
-        int marginBottom = (int) (displayHeight - (itemViewLocation[1] + itemViewHeight));
-
-        float btnWidth = iv_rename.getWidth();
-        float btnHeight = iv_rename.getHeight();
-        float btnMargin = btnWidth * 0.25f;
-
-        Map<String, Integer> locationParam;
-        Map<String, Float> param = new HashMap<>();
-        param.put(PARAM_ITEMVIEW_X, (float) itemViewLocation[0]);
-        param.put(PARAM_ITEMVIEW_Y, (float) itemViewLocation[1]);
-        param.put(PARAM_ITEMVIEW_WIDTH, itemViewWidth);
-        param.put(PARAM_ITEMVIEW_HEIGHT, itemViewHeight);
-        param.put(PARAM_BTN_WIDTH, btnWidth);
-        param.put(PARAM_BTN_HEIGHT, btnHeight);
-        param.put(PARAM_BTN_MARGIN, btnMargin);
-        param.put(PARAM_MARGIN_TOP, (float) marginTop);
-        param.put(PARAM_MARGIN_BOTTOM, (float) marginBottom);
-
-        if (marginLeft > btnWidth && marginRight > btnWidth && Math.abs(marginLeft - marginRight) < displayWidth * 0.5) {
-            // 上下模式
-
-            if (itemViewLocation[1] > (displayHeight - itemViewLocation[1])) {
-                // 上边
-                locationParam = MenuLocationUtil.getInfoToTop(param);
-            } else {
-                // 下边
-                locationParam = MenuLocationUtil.getInfoToBottom(param);
-            }
-        } else if (marginTop > btnWidth && marginBottom > btnWidth && Math.abs(itemViewLocation[1] - (displayHeight - itemViewLocation[1])) < displayHeight * 0.58) {
-            // 左右模式
-
-            if (marginLeft > marginRight) {
-                // 左边
-                locationParam = MenuLocationUtil.getInfoToLeft(param);
-            } else {
-                // 右边
-                locationParam = MenuLocationUtil.getInfoToRight(param);
-            }
-        } else if (itemViewHeight > btnHeight * 4 && marginTop > 0 - btnHeight * 3 && (displayHeight - itemViewLocation[1]) > btnHeight * 4) {
-            // 左右模式
-
-            if (marginLeft > marginRight) {
-                // 左边
-                locationParam = MenuLocationUtil.getInfoToLeft(param);
-            } else {
-                // 右边
-                locationParam = MenuLocationUtil.getInfoToRight(param);
-            }
-        } else if (marginLeft > marginRight) {
-            if (marginTop > marginBottom) {
-                // 四角模式  左上方
-                locationParam = MenuLocationUtil.getInfoToLeftTop(param);
-            } else {
-                // 四角模式  左下方
-                locationParam = MenuLocationUtil.getInfoToLeftBottom(param);
-            }
-        } else {
-            if (marginTop > marginBottom) {
-                // 四角模式  右上方
-                locationParam = MenuLocationUtil.getInfoToRightTop(param);
-            } else {
-                // 四角模式  右下方
-                locationParam = MenuLocationUtil.getInfoToRightBottom(param);
-            }
-        }
+        Map<String, Integer> locationParam = new MenuLocationUtil(mContext, iv_rename, itemViewWidth, itemViewHeight, itemViewLocation).initMenuLocation();
 
         // 更新 重命名按钮 坐标
         FrameLayout.LayoutParams paramsRename = (FrameLayout.LayoutParams) iv_rename.getLayoutParams();
@@ -314,6 +237,39 @@ public class PhotoMenuPopupWindow extends PopupWindow {
      */
     private void initListener() {
         rl_root.setOnClickListener((View view) -> dismiss());
+        cv_item_view.setClickable(true);
+        iv_rename.setOnClickListener(this::clickToRename);
+        iv_private.setOnClickListener(this::clickToPrivate);
+        iv_delete.setOnClickListener(this::clickToDelete);
+    }
+
+    /**
+     * 点击事件 --> 重命名
+     *
+     * @param view
+     */
+    private void clickToRename(View view) {
+
+    }
+
+    /**
+     * 点击事件 --> 隐私
+     *
+     * @param view
+     */
+    private void clickToPrivate(View view) {
+        if (mCallback != null) {
+            mCallback.onPrivate(mPosition, !mIsPrivate);
+        }
+    }
+
+    /**
+     * 点击事件 --> 删除
+     *
+     * @param view
+     */
+    private void clickToDelete(View view) {
+
     }
 
     /**
@@ -364,5 +320,30 @@ public class PhotoMenuPopupWindow extends PopupWindow {
                         dismiss();
                     }
                 });
+    }
+
+    /**
+     * 菜单回调
+     */
+    public interface MenuCallback {
+
+        /**
+         * 重命名回调
+         *
+         * @param newName 新文件夹名
+         */
+        void onRename(int position, String newName);
+
+        /**
+         * 隐私回调
+         *
+         * @param isPrivate 新状态是否为隐私模式
+         */
+        void onPrivate(int position, boolean isPrivate);
+
+        /**
+         * 删除回调
+         */
+        void onDelete(int position);
     }
 }

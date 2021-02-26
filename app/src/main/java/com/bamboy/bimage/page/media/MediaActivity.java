@@ -31,8 +31,13 @@ import com.bamboy.bimage.view.freedom.smartrefresh.SmartRefreshLayout;
 import com.bamboy.bimage.view.freedom.smartrefresh.api.RefreshLayout;
 import com.bamboy.bimage.view.toast.BamToast;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+
+import static com.bamboy.bimage.util.FileInfoManager.LOCK_FILE_NAME;
+import static com.bamboy.bimage.util.FileInfoManager.addLockFiledir;
 
 public class MediaActivity extends BaseActivity implements FreedomCallback, FreedomLongClickCallback {
 
@@ -268,8 +273,57 @@ public class MediaActivity extends BaseActivity implements FreedomCallback, Free
             }
 
             // 处理菜单弹窗
-            mMenuPopupWindow = new PhotoMenuPopupWindow(this, view, false);
+            mMenuPopupWindow = new PhotoMenuPopupWindow(this, position, view, false, new PhotoMenuPopupWindow.MenuCallback() {
+
+                /**
+                 * 重命名回调
+                 *
+                 * @param newName 新文件夹名
+                 */
+                @Override
+                public void onRename(int position, String newName) {
+
+                }
+
+                /**
+                 * 隐私回调
+                 *
+                 * @param isPrivate 新状态是否为隐私模式
+                 */
+                @Override
+                public void onPrivate(int position, boolean isPrivate) {
+                    if (mList.get(position) instanceof FItemDir == false) {
+                        return;
+                    }
+                    FItemDir fItemDir = (FItemDir) mList.get(position);
+                    String filedirUrl = fItemDir.getDirectoryBean().getPath();
+
+                    // 隐藏菜单
+                    mMenuPopupWindow.dismiss();
+
+                    try {
+                        // 添加到隐私文件夹集合
+                        addLockFiledir(MediaActivity.this, mMediaType, filedirUrl, () -> {
+                            // 移除条目
+                            mList.remove(position);
+                            mAdapter.notifyItemRemoved(position);
+                        });
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+
+                /**
+                 * 删除回调
+                 */
+                @Override
+                public void onDelete(int position) {
+
+                }
+            });
+            // 消失回调
             mMenuPopupWindow.setOnDismissListener(() -> mMenuPopupWindow = null);
+            // 显示菜单弹窗
             mMenuPopupWindow.showAtLocation(view, Gravity.NO_GRAVITY, 0, 0);
             return true;
         }

@@ -1,0 +1,16 @@
+package com.bamboy.bimage.page.lock.media;
+
+import androidx.appcompat.app.AppCompatActivity;
+
+import android.os.Bundle;
+
+import com.bamboy.bimage.R;
+
+public class LockMediaActivity extends AppCompatActivity {
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_lock_media);
+    }
+}

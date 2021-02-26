@@ -1,11 +1,15 @@
 package com.bamboy.bimage.view.freedom.smartrefresh.view;
 
+import android.animation.AnimatorSet;
+import android.animation.ObjectAnimator;
+import android.animation.ValueAnimator;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.RectF;
 import androidx.core.content.ContextCompat;
 import android.view.View;
+import android.view.animation.LinearInterpolator;
 
 import com.bamboy.bimage.R;
 
@@ -156,5 +160,38 @@ public class SlopeProgress extends View {
 
         this.progress = progress;
         invalidate();
+    }
+
+    private AnimatorSet spAnim;
+
+    /**
+     * 开始动画
+     */
+    public void startAnim(){
+        if (spAnim == null) {
+            spAnim = new AnimatorSet();
+        }
+
+        if (spAnim.isRunning()) {
+            return;
+        }
+
+        float rotation = getRotation();
+
+        // 旋转动画
+        ObjectAnimator rotationAnim = ObjectAnimator.ofFloat(this, "rotation", rotation, rotation + 360);
+        rotationAnim.setRepeatCount(ValueAnimator.INFINITE);
+        rotationAnim.setRepeatMode(ValueAnimator.RESTART);
+        rotationAnim.setDuration(780);
+        rotationAnim.setInterpolator(new LinearInterpolator());
+
+        // 改变进度动画
+        ObjectAnimator progressAnim = ObjectAnimator.ofInt(this, "progress", 90, 1);
+        progressAnim.setRepeatCount(ValueAnimator.INFINITE);
+        progressAnim.setRepeatMode(ValueAnimator.REVERSE);
+        progressAnim.setDuration(920);
+
+        spAnim.playTogether(rotationAnim, progressAnim);
+        spAnim.start();
     }
 }

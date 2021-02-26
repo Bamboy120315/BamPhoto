@@ -31,6 +31,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import static com.bamboy.bimage.util.FileInfoManager.LOCK_FILE_NAME;
+
 public class FileListActivity extends BaseActivity implements FreedomCallback {
     /**
      * 是否是选择模式
@@ -152,7 +154,7 @@ public class FileListActivity extends BaseActivity implements FreedomCallback {
             }
 
             // 过滤以点开头的文件
-            if (file.getName().startsWith(".")) {
+            if (file.getName().startsWith(".") && !file.getName().equals(LOCK_FILE_NAME)) {
                 continue;
             }
 

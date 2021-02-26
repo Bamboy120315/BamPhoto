@@ -60,6 +60,10 @@ public class MainActivity extends BaseActivity implements FreedomCallback {
         findView();
         init();
         initPermissions();
+
+
+
+
     }
 
     @Override

@@ -1,12 +1,33 @@
 package com.bamboy.bimage.util;
 
+import android.app.Dialog;
+import android.content.Context;
+import android.content.SharedPreferences;
+
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
+import com.bamboy.bimage.page.application.BaseApplication;
+import com.bamboy.bimage.view.dialog.LockFileDialog;
+
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static android.content.Context.MODE_PRIVATE;
+
 public class FileInfoManager {
+    /**
+     * 隐藏文件的配置文件名
+     */
+    public final static String LOCK_FILE_NAME = ".nomedia";
+    /**
+     * 隐藏文件的追加字符
+     */
+    public final static String LOCK_FILE_POSTFIX = "_bamlock";
+
     /**
      * 系统文件集合
      */
@@ -14,7 +35,7 @@ public class FileInfoManager {
     /**
      * 隐私文件集合【通过本APP添加的隐私文件夹】
      */
-    public static List<String> lockFileList;
+    private static List<String> lockFileList;
     /**
      * 隐私文件集合【所有拥有隐私文件的文件夹】
      */
@@ -29,7 +50,21 @@ public class FileInfoManager {
     public static String sdcardPath = "/storage/emulated/0";
 
     static {
-        lockFileList = new ArrayList<>();
+        // 获取数据
+        getFlieDownloadData();
+        if (lockFileList == null) {
+            lockFileList = new ArrayList<>();
+        } else {
+            for (int i = 0; i < lockFileList.size(); i++) {
+                File file = new File(lockFileList.get(i), LOCK_FILE_NAME);
+                if (!file.exists()) {
+                    lockFileList.remove(i);
+                    i--;
+                    continue;
+                }
+            }
+            saveFlieDownloadData();
+        }
         allLockFileList = new ArrayList<>();
 
         syatemFileList = new ArrayList<>();
@@ -156,5 +191,89 @@ public class FileInfoManager {
         }
 
         return false;
+    }
+
+    /**
+     * 是否是隐私文件
+     *
+     * @param url
+     * @return
+     */
+    public static boolean isLockFiledir(String url) {
+        for (String filedirName : lockFileList) {
+            if (filedirName.equals(url)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * 添加隐私文件夹
+     *
+     * @param url
+     */
+    public static void addLockFiledir(Context context, int mediaType, String url, Runnable run) throws IOException {
+        File lockFile = new File(url, LOCK_FILE_NAME);
+        // 创建.nomedia文件
+        lockFile.createNewFile();
+
+        // 添加到隐私文件夹集合
+        lockFileList.add(url);
+
+        // 保存数据
+        saveFlieDownloadData();
+
+        new LockFileDialog(context, url, run).show();
+    }
+
+    /**
+     * 取消隐藏隐私文件夹
+     *
+     * @param url
+     */
+    public static void removeLockFiledir(String url) {
+        // 从隐私文件夹集合移除
+        lockFileList.remove(url);
+
+        // 保存数据
+        saveFlieDownloadData();
+    }
+
+
+    // =====================================================================
+    // ======================= 以下是关于数据存储 ============================
+    // =====================================================================
+
+    /**
+     * key
+     */
+    private final static String KEY_LOCKFILE = "LockFile";
+
+    /**
+     * 获取数据
+     */
+    private static void getFlieDownloadData() {
+        SharedPreferences preferences = BaseApplication.getInstance().getSharedPreferences(KEY_LOCKFILE, MODE_PRIVATE);
+        String data = preferences.getString(KEY_LOCKFILE, "");
+
+        lockFileList = JSONArray.parseArray(data, String.class);
+    }
+
+    /**
+     * 保存数据
+     */
+    private static void saveFlieDownloadData() {
+        if (lockFileList == null) {
+            lockFileList = new ArrayList<>();
+        }
+        String data = JSON.toJSONString(lockFileList);
+        if (NullUtil.isNull(data)) {
+            return;
+        }
+        // 保存
+        SharedPreferences.Editor editor = BaseApplication.getInstance().getSharedPreferences(KEY_LOCKFILE, MODE_PRIVATE).edit();
+        editor.putString(KEY_LOCKFILE, data);
+        editor.apply();
     }
 }
